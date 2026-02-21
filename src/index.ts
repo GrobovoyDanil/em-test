@@ -1,6 +1,12 @@
 import express from "express";
 import dotenv from "dotenv";
-import { register, login } from "./controllers/authController.js";
+import { register, login, refresh } from "./controllers/authController.js";
+import { authenticateToken } from "./middlewares/authMiddleware.js";
+import {
+  getAllUsers,
+  getUserById,
+  toggleUserStatus,
+} from "./controllers/userController.js";
 
 dotenv.config();
 
@@ -10,6 +16,11 @@ app.use(express.json());
 
 app.post("/api/register", register);
 app.post("/api/login", login);
+app.post("/api/refresh", refresh);
+
+app.get("/api/users", authenticateToken, getAllUsers);
+app.get("/api/users/:id", authenticateToken, getUserById);
+app.patch("/api/users/:id/toggle", authenticateToken, toggleUserStatus);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

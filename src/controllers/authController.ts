@@ -2,12 +2,20 @@ import { type Request, type Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
+import { registerSchema, loginSchema } from "../schemas/authSchema.js";
 
 const prisma = new PrismaClient();
 
 export const register = async (req: Request, res: Response) => {
+  //valid
+  const validation = registerSchema.safeParse(req.body);
+  if (!validation.success) {
+    return res
+      .status(400)
+      .json({ message: "Ошибка валидации", errors: validation.error.format() });
+  }
   try {
-    const { fullName, birthDate, email, password, role } = req.body;
+    const { fullName, birthDate, email, password, role } = validation.data;
 
     // check user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -41,7 +49,7 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
-const generateTokens = (user: { id: number; role: string }) => {
+const generateTokens = (user: { id: number; role: any }) => {
   const accessToken = jwt.sign(
     { userId: user.id, role: user.role },
     process.env.JWT_ACCESS_SECRET!,
@@ -58,14 +66,21 @@ const generateTokens = (user: { id: number; role: string }) => {
 };
 
 export const login = async (req: Request, res: Response) => {
+  //valid
+  const validation = loginSchema.safeParse(req.body);
+  if (!validation.success) {
+    return res
+      .status(400)
+      .json({ message: "Ошибка валидации", errors: validation.error.format() });
+  }
+
   try {
-    const { email, password } = req.body;
+    const { email, password } = validation.data;
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(400).json({ message: "Неверный email или пароль" });
-    }
-    if (!user.isActive) {
+    } else if (!user.isActive) {
       return res.status(403).json({ message: "Ваш аккаунт заблокирован" });
     }
 
@@ -91,7 +106,7 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-export const refreshToken = async (req: Request, res: Response) => {
+export const refresh = async (req: Request, res: Response) => {
   const { refreshToken } = req.body;
   if (!refreshToken) {
     return res.status(401).json({ message: "Отсутствует refresh token" });
