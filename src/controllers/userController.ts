@@ -8,6 +8,11 @@ const prisma = new PrismaClient();
 
 export const getAllUsers = async (req: AuthRequest, res: Response) => {
   try {
+    const currentUserRole = req.user?.role;
+
+    if (currentUserRole !== "ADMIN") {
+      return res.status(403).json({ message: "Доступ запрещен" });
+    }
     const users = await prisma.user.findMany({
       select: {
         id: true,
