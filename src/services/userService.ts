@@ -1,4 +1,3 @@
-import { PrismaClient } from "@prisma/client/extension";
 import { prisma } from "../prisma.js";
 
 // const prisma = new PrismaClient();
@@ -16,7 +15,7 @@ export const getAllUsers = async () => {
 };
 
 export const getUserById = async (id: number) => {
-  return await prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id },
     select: {
       id: true,
@@ -27,6 +26,10 @@ export const getUserById = async (id: number) => {
       isActive: true,
     },
   });
+  if (!user) {
+    throw new Error("USER_NOT_FOUND");
+  }
+  return user;
 };
 
 export const toggleUserStatus = async (id: number) => {

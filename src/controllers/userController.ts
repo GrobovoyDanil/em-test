@@ -1,7 +1,4 @@
 import { type Request, type Response } from "express";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
 import { type AuthRequest } from "../middlewares/authMiddleware.js";
 import * as UserService from "../services/userService.js";
 
